@@ -3,6 +3,13 @@
 
 
 /**
+ * @brief Init Wifi interface
+ * 
+ */
+void wifi_init(void);
+
+
+/**
  * @brief Start wifi in AP mode
  * 
  */

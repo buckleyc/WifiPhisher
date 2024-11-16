@@ -1,6 +1,10 @@
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "nvs_flash.h"
 #include "server.h"
 #include "wifiMng.h"
+#include "dns.h"
 
 void app_main() 
 {
@@ -12,8 +16,14 @@ void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
+    /* Init wifi */
+    wifi_init();
+
     /* Start wifi AP */
     wifi_start_softap();
+
+    /* Start dns server */
+    dns_server_start();
 
     /* Start http server */
     http_server_start();
