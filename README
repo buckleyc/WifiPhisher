@@ -1,0 +1,5 @@
+Funzionamento in generale
+
+L'esp all'avvio attiva un hotspot wifi con ssid e password di default che potremo modificare in seguito tramite la pagina web
+avvia il server httpd e un server DNS il cui inico compito sara di reindirizzare tutti gli host sul nostro ip
+una volta che ci siamo connessi all'hotspot creato dobbiamo navigare alla pagina /admin

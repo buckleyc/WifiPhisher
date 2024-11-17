@@ -20,14 +20,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
     if (event_id == WIFI_EVENT_AP_STACONNECTED) 
     {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
-                 MAC2STR(event->mac), event->aid);
+        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d", MAC2STR(event->mac), event->aid);
     } 
     else if (event_id == WIFI_EVENT_AP_STADISCONNECTED)
     {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        //ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d, reason=%d",
-                 //MAC2STR(event->mac), event->aid, event->reason);
+        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d, reason=NULL", MAC2STR(event->mac), event->aid);
     }
 }
 
@@ -56,9 +54,24 @@ void wifi_start_softap(void)
             .pmf_cfg = {
                     /* Cannot set pmf to required when in wpa-wpa2 mixed mode! Setting pmf to optional mode. */
                     .required = false, 
-            },
-        },
+            }
+        }
     };
+
+    if(read_string_from_flash("wifi_ssid", (char *)&wifi_config.ap.ssid) != ESP_OK )
+    {
+        strcpy((char *)&wifi_config.ap.ssid, DEFAULT_WIFI_SSID);
+    }
+    if(read_string_from_flash("wifi_pass", (char *)&wifi_config.ap.password) != ESP_OK )
+    {
+        strcpy((char *)&wifi_config.ap.password, DEFAULT_WIFI_PASS);
+    }
+    if(read_int_from_flash("wifi_pass", (int32_t *)&wifi_config.ap.channel) != ESP_OK )
+    {
+        wifi_config.ap.channel = DEFAULT_WIFI_CHAN;
+    }
+
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());

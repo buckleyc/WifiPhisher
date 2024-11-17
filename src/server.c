@@ -93,7 +93,7 @@ void http_server_start(void)
 	config.max_open_sockets = 10;
 	config.lru_purge_enable = true;
     httpd_handle_t server = NULL;
-	
+
     if (httpd_start(&server, &config) == ESP_OK) 
 	{
         httpd_uri_t redirect_uri = {

@@ -3,6 +3,7 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include "server.h"
+#include "admin_server.h"
 #include "wifiMng.h"
 #include "dns.h"
 
@@ -25,6 +26,6 @@ void app_main()
     /* Start dns server */
     dns_server_start();
 
-    /* Start http server */
-    http_server_start();
+    /* Start admin http server */
+    http_admin_server_start();
 }
