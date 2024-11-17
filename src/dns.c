@@ -5,7 +5,7 @@
 
 #define DNS_PORT 53
 #define RESPONSE_IP_ADDR {192, 168, 4, 1}
-
+static const char *TAG= "DNS_SERVER:";
 
 static void dns_server_task(void *pvParameters) 
 {
@@ -25,12 +25,12 @@ static void dns_server_task(void *pvParameters)
     server_addr.sin_port = htons(DNS_PORT);
 
     if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        printf("Errore nel bind del socket DNS\n");
+        ESP_LOGE(TAG, "Errore nel bind del socket DNS\n");
         close(sock);
         vTaskDelete(NULL);
         return;
     }
-    printf("Server DNS in ascolto sulla porta %d\n", DNS_PORT);
+    ESP_LOGD(TAG, "Server DNS in ascolto sulla porta %d\n", DNS_PORT);
 
     uint8_t response_template[] = {
         0x00, 0x00, // ID (verrà copiato dalla richiesta)
@@ -47,7 +47,7 @@ static void dns_server_task(void *pvParameters)
     {
         int len = recvfrom(sock, buf, sizeof(buf), 0, (struct sockaddr *)&client_addr, &client_addr_len);
         if (len < 0) {
-            printf("Errore nella ricezione dei dati DNS\n");
+            ESP_LOGE(TAG, "Errore nella ricezione dei dati DNS\n");
             continue;
         }
 

@@ -58,19 +58,20 @@ void wifi_start_softap(void)
         }
     };
 
-    if(read_string_from_flash("wifi_ssid", (char *)&wifi_config.ap.ssid) != ESP_OK )
+    if(read_string_from_flash(WIFI_SSID_KEY, (char *)&wifi_config.ap.ssid) != ESP_OK )
     {
         strcpy((char *)&wifi_config.ap.ssid, DEFAULT_WIFI_SSID);
     }
-    if(read_string_from_flash("wifi_pass", (char *)&wifi_config.ap.password) != ESP_OK )
+    wifi_config.ap.ssid_len = strlen((char *)&wifi_config.ap.ssid);
+    if(read_string_from_flash(WIFI_PASS_KEY, (char *)&wifi_config.ap.password) != ESP_OK )
     {
         strcpy((char *)&wifi_config.ap.password, DEFAULT_WIFI_PASS);
     }
-    if(read_int_from_flash("wifi_pass", (int32_t *)&wifi_config.ap.channel) != ESP_OK )
+    if(read_int_from_flash(WIFI_CHAN_KEY, (int32_t *)&wifi_config.ap.channel) != ESP_OK )
     {
         wifi_config.ap.channel = DEFAULT_WIFI_CHAN;
     }
-
+    wifi_config.ap.authmode = DEFAULT_WIFI_AUTH;
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));

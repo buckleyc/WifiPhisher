@@ -1,4 +1,5 @@
 #include <esp_wifi.h>
+#include "nvs_keys.h"
 
 /* WIFI CONFIGURATION */
 #define DEFAULT_WIFI_SSID           "MagicWifi"
@@ -23,6 +24,15 @@ void save_string_to_flash(const char* key, const char* value);
  * @param key 
  */
 esp_err_t read_string_from_flash(const char* key, char* value);
+
+
+/**
+ * @brief Save int32 to flash
+ * 
+ * @param key 
+ * @param value 
+ */
+void save_int_to_flash(const char* key, int32_t value);
 
 
 /**

@@ -64,6 +64,31 @@ esp_err_t read_string_from_flash(const char* key, char* value)
 }
 
 
+void save_int_to_flash(const char* key, int32_t value) 
+{
+    nvs_handle_t nvs_handle;
+    esp_err_t err;
+
+    err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
+    if (err != ESP_OK) {
+        printf("Errore nell'aprire NVS (%s)\n", esp_err_to_name(err));
+        return;
+    }
+
+    err = nvs_set_i32(nvs_handle, key, value);
+    if (err != ESP_OK) {
+        printf("Errore nel salvare la stringa (%s)\n", esp_err_to_name(err));
+    }
+
+    err = nvs_commit(nvs_handle);
+    if (err != ESP_OK) {
+        printf("Errore nel commit della stringa (%s)\n", esp_err_to_name(err));
+    }
+
+    nvs_close(nvs_handle);
+}
+
+
 esp_err_t read_int_from_flash(const char* key, int32_t *value) 
 {
     nvs_handle_t nvs_handle;
@@ -86,3 +111,5 @@ esp_err_t read_int_from_flash(const char* key, int32_t *value)
 
     return ESP_OK;
 }
+
+

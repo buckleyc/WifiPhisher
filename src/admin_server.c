@@ -41,7 +41,7 @@ static esp_err_t admin_page_handler(httpd_req_t *req)
     {
         strcpy(password, DEFAULT_WIFI_PASS);
     }
-    if( read_int_from_flash("wifi_chan", channel) != ESP_OK )
+    if( read_int_from_flash("wifi_chan", &channel) != ESP_OK )
     {
         channel = DEFAULT_WIFI_CHAN;
     }
@@ -66,7 +66,7 @@ static esp_err_t admin_page_handler(httpd_req_t *req)
 
 static esp_err_t admin_page_settings_ap_submit_handler(httpd_req_t *req)
 {
-    char buffer[512];
+    char buffer[256];
     int ret;
 
     ret = httpd_req_recv(req, buffer, sizeof(buffer) - 1);
@@ -78,13 +78,19 @@ static esp_err_t admin_page_settings_ap_submit_handler(httpd_req_t *req)
     }
 
     buffer[ret] = '\0';
-    printf("Dati ricevuti: %s\n", buffer);
     char ssid[64] = {0};
     char password[64] = {0};
-    char channel[8] = {0};
-    sscanf(buffer, "ssid=%63[^&]&password=%63[^&]&channel=%7s", ssid, password, channel);
-    printf("SSID: %s, Password: %s, Channel: %s\n", ssid, password, channel);
-    httpd_resp_send(req, "Settings updated successfully!", HTTPD_RESP_USE_STRLEN);
+    int channel = 1;
+    sscanf(buffer, "ssid=%63[^&]&password=%63[^&]&channel=%d", ssid, password, &channel);
+
+    /* Save new settings */
+    save_string_to_flash(WIFI_SSID_KEY, ssid);
+    save_string_to_flash(WIFI_PASS_KEY, password);
+    save_int_to_flash(WIFI_CHAN_KEY, channel);
+    
+    /* Send response */
+    httpd_resp_send(req, "Settings updated successfully!\nRestart the device to make it effective!", HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send(req, NULL, 0);
     return ESP_OK;
 } 
 
