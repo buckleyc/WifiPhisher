@@ -5,6 +5,13 @@
  * @brief Start http server task
  * 
  */
-void http_server_start(void);
+void http_attack_server_start(void);
+
+
+/**
+ * @brief Stop http server
+ * 
+ */
+void http_attack_server_stop(void);
 
 #endif

@@ -1,4 +1,7 @@
-static const char *HTML_PAGE = 
+#ifndef _CAPTIVE_PAGE_H
+#define _CAPTIVE_PAGE_H
+
+const char *HTML_PAGE = 
     "<!DOCTYPE html>"
     "<html>"
     "<head>"
@@ -18,3 +21,6 @@ static const char *HTML_PAGE =
     "</form>"
     "</body>"
     "</html>";
+
+
+#endif

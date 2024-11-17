@@ -26,6 +26,7 @@
 static const char *TAG = "HTTPD";	//TAG for debug
 static const char *host = "vodafone.station";
 static const char *captive_portal_url = "http://192.168.4.1/captive_portal";
+static httpd_handle_t server = NULL;
 
 
 static void captive_portal_redirect(httpd_req_t *req)
@@ -86,13 +87,20 @@ static esp_err_t redirect_handler(httpd_req_t *req)
 }
 
 
-void http_server_start(void)
+void http_attack_server_start(void)
 {
+	if( server != NULL )
+	{
+		ESP_LOGE(TAG, "Attack server already started.");
+		return;
+	}
+
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+	config.ctrl_port = 81;
+	config.server_port = 80;
 	config.uri_match_fn = httpd_uri_match_wildcard;
 	config.max_open_sockets = 10;
 	config.lru_purge_enable = true;
-    httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) == ESP_OK) 
 	{
@@ -103,5 +111,22 @@ void http_server_start(void)
             .user_ctx = NULL
         };
         httpd_register_uri_handler(server, &redirect_uri);
+    }
+	else
+	{
+		ESP_LOGE(TAG, "Failed to start captive portal server.");
+	}
+}
+
+
+void http_attack_server_stop(void)
+{
+	if( server != NULL )
+    {
+        if( httpd_stop(server) != ESP_OK )
+        {
+            ESP_LOGD(TAG, "Failed to stop attack server.");
+            return;
+        }
     }
 }

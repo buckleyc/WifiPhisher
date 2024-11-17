@@ -1,3 +1,6 @@
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
 #include <esp_wifi.h>
 #include "nvs_keys.h"
 
@@ -43,3 +46,6 @@ void save_int_to_flash(const char* key, int32_t value);
  * @return esp_err_t 
  */
 esp_err_t read_int_from_flash(const char* key, int32_t *value);
+
+
+#endif

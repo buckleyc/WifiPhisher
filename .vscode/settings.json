@@ -10,6 +10,10 @@
         "nvs_flash.h": "c",
         "string.h": "c",
         "esp_http_server.h": "c",
-        "server.h": "c"
+        "server.h": "c",
+        "sstream": "c",
+        "vendors.h": "c",
+        "evil_twin.h": "c",
+        "wifimng.h": "c"
     }
 }

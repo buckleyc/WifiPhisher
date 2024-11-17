@@ -16,17 +16,21 @@
 #include <lwip/sys.h>
 #include <lwip/api.h>
 #include <lwip/netdb.h>
-
 #include "esp_http_server.h"
 
-#include "web_page.h"
 #include "server.h"
 #include "admin_page.h"
 #include "config.h"
+#include "evil_twin.h"
+#include "img/admin_favicon.h"
 
+
+/* Server handler */
+static httpd_handle_t server = NULL;
+static const char *TAG = "ADMIN_SERVER:";
 /* Strings for sending chiper information */
 static const char *authmode_str[] = {
-        "Open", "WEP", "WPA_PSK", "WPA2_PSK", "WPA_WPA2_PSK", "WPA3_PSK", "WPA2_WPA3_PSK", "WAPI_PSK"
+        "Open", "WEP", "WPA/PSK", "WPA2/PSK", "WPA_WPA2/PSK", "WPA3/PSK", "WPA2_WPA3/PSK", "WAPI/PSK"
 };
 static const char *cipher_str[] = {
     "None", "WEP40", "WEP104", "TKIP", "CCMP", "TKIP_CCMP", "AES_CMAC", "Unknown"
@@ -157,16 +161,71 @@ static esp_err_t targets_scan_handler(httpd_req_t *req)
 }
 
 
+static esp_err_t admin_favicon_handler(httpd_req_t *req) 
+{
+    httpd_resp_set_type(req, "image/png");
+    httpd_resp_send(req, (const char *)admin_favicon_data, admin_favicon_size);
+    return ESP_OK;
+}
+
+
+static esp_err_t evil_twin_handler(httpd_req_t *req) 
+{
+    char buffer[256];
+    int ret = httpd_req_recv(req, buffer, sizeof(buffer) - 1);
+    if (ret <= 0) {
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+            httpd_resp_send_408(req);
+        }
+        return ESP_FAIL;
+    }
+    buffer[ret] = '\0';
+    char bssid[64] = {0};
+    target_info_t target_info = { 0 };
+    sscanf(buffer,"ssid=%32[^&]&bssid=%17[^&]&channel=%hhu&signal=%hhd", target_info.ssid, bssid, &target_info.channel, &target_info.rssi);
+
+    if (sscanf(bssid, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+               &target_info.bssid[0], &target_info.bssid[1], &target_info.bssid[2],
+               &target_info.bssid[3], &target_info.bssid[4], &target_info.bssid[5]) != 6) {
+        ESP_LOGE(TAG, "Errore nel parsing del BSSID\n");
+        return ESP_FAIL;
+    }
+
+    httpd_resp_sendstr(req, "EvilTwin attack is started, this page will no longer be enabled until device reset.");
+    httpd_resp_send(req, NULL, 0);
+
+    /* Start evil twin attack */
+    evil_twin_set_target(&target_info);
+    evil_twin_start_attack();
+
+    return ESP_OK;
+}
+
+
 void http_admin_server_start(void)
 {
+    if( server != NULL )
+    {
+        ESP_LOGD(TAG, "Admin server already started.");
+        return;
+    }
+
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-	config.max_open_sockets = 10;
 	config.lru_purge_enable = true;
+    config.ctrl_port = 8081;
     config.server_port = 8080;
-    httpd_handle_t server = NULL;
 
     if (httpd_start(&server, &config) == ESP_OK) 
 	{
+        /* Admin favicon */
+        httpd_uri_t admin_favicon_uri = {
+            .uri = "/favicon.ico",
+            .method = HTTP_GET,
+            .handler = admin_favicon_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &admin_favicon_uri);
+
         /* Main page handler*/
         httpd_uri_t admin_uri = {
             .uri = "/",
@@ -193,5 +252,27 @@ void http_admin_server_start(void)
             .user_ctx = NULL
         };
         httpd_register_uri_handler(server, &targets_scan_uri);
+
+        /* Handler for starting evil twin attack */
+        httpd_uri_t evil_twin_uri = {
+            .uri = "/evil_twin",
+            .method = HTTP_POST,
+            .handler = evil_twin_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &evil_twin_uri);
+    }
+}
+
+
+void http_admin_server_stop(void)
+{
+    if( server != NULL )
+    {
+        if( httpd_stop(server) != ESP_OK )
+        {
+            ESP_LOGD(TAG, "Failed to stop admin server.");
+            return;
+        }
     }
 }

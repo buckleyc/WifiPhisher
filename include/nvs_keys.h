@@ -1,3 +1,5 @@
+#ifndef _NVS_KEYS_H
+#define _NVS_KEYS_H
 
 /**
  * @brief Key for storage on wifi ssid
@@ -16,3 +18,5 @@
  * 
  */
 #define WIFI_CHAN_KEY   "wifi_chan"
+
+#endif
