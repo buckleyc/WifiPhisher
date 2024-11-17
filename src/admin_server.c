@@ -24,6 +24,17 @@
 #include "admin_page.h"
 #include "config.h"
 
+/* Strings for sending chiper information */
+static const char *authmode_str[] = {
+        "Open", "WEP", "WPA_PSK", "WPA2_PSK", "WPA_WPA2_PSK", "WPA3_PSK", "WPA2_WPA3_PSK", "WAPI_PSK"
+};
+static const char *cipher_str[] = {
+    "None", "WEP40", "WEP104", "TKIP", "CCMP", "TKIP_CCMP", "AES_CMAC", "Unknown"
+};
+/* Buffers for json used for network scanning */
+static char json_response[2048];
+static char entry[256];
+
 
 static esp_err_t admin_page_handler(httpd_req_t *req) 
 {
@@ -95,6 +106,57 @@ static esp_err_t admin_page_settings_ap_submit_handler(httpd_req_t *req)
 } 
 
 
+static esp_err_t targets_scan_handler(httpd_req_t *req) 
+{
+    wifi_scan_config_t scan_config = {
+        .ssid = 0,
+        .bssid = 0,
+        .channel = 0,
+        .show_hidden = false,
+        .scan_type = WIFI_SCAN_TYPE_ACTIVE,
+        .scan_time.active.min = 100,
+        .scan_time.active.max = 500
+    };
+
+    ESP_ERROR_CHECK(esp_wifi_scan_start(&scan_config, true));
+    uint16_t ap_count = 0;
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+    wifi_ap_record_t ap_records[ap_count];
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&ap_count, ap_records));
+
+    memset(&json_response, 0, sizeof(json_response));
+    snprintf(json_response, sizeof(json_response), "[");
+    for (int i = 0; i < ap_count; i++) {
+        memset(&entry, 0, sizeof(entry));
+        snprintf(entry, sizeof(entry),
+                 "{\"ssid\":\"%s\","
+                 "\"signal\":%d,"
+                 "\"channel\":%d,"
+                 "\"bssid\":\"%02X:%02X:%02X:%02X:%02X:%02X\","
+                 "\"authmode\":\"%s\","
+                 //"\"pairwise_cipher\":\"%s\","
+                 //"\"group_cipher\":\"%s\","
+                 "\"wps\":%d}%s",
+                 ap_records[i].ssid,
+                 ap_records[i].rssi,
+                 ap_records[i].primary,
+                 ap_records[i].bssid[0], ap_records[i].bssid[1], ap_records[i].bssid[2],
+                 ap_records[i].bssid[3], ap_records[i].bssid[4], ap_records[i].bssid[5],
+                 authmode_str[ap_records[i].authmode],
+                 //cipher_str[ap_records[i].pairwise_cipher],
+                 //cipher_str[ap_records[i].group_cipher],
+                 ap_records[i].wps,
+                 (i < ap_count - 1) ? "," : "");
+        strncat(json_response, entry, sizeof(json_response) - strlen(json_response) - 1);
+    }
+    strncat(json_response, "]", sizeof(json_response) - strlen(json_response) - 1);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_send(req, json_response, HTTPD_RESP_USE_STRLEN);
+
+    return ESP_OK;
+}
+
+
 void http_admin_server_start(void)
 {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -122,5 +184,14 @@ void http_admin_server_start(void)
             .user_ctx = NULL
         };
         httpd_register_uri_handler(server, &save_ap_uri);
+
+        /* Handler for targets scan */
+        httpd_uri_t targets_scan_uri = {
+            .uri = "/scan_networks",
+            .method = HTTP_GET,
+            .handler = targets_scan_handler,
+            .user_ctx = NULL
+        };
+        httpd_register_uri_handler(server, &targets_scan_uri);
     }
 }
