@@ -35,7 +35,7 @@ static void add_client_to_list(const uint8_t *mac)
 }
 
 
-static void promiscuous_callback(void *buf, wifi_promiscuous_pkt_type_t type) 
+IRAM_ATTR static void promiscuous_callback(void *buf, wifi_promiscuous_pkt_type_t type) 
 {
     if (type != WIFI_PKT_DATA) {
         return;
