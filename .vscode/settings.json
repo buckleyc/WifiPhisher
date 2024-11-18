@@ -22,6 +22,7 @@
         "esp_task_wdt.h": "c",
         "array": "c",
         "string": "c",
-        "string_view": "c"
+        "string_view": "c",
+        "bootstrap_min_css.h": "c"
     }
 }

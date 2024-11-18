@@ -11,26 +11,48 @@
 #include "freertos/event_groups.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
-
 #include <lwip/sockets.h>
 #include <lwip/sys.h>
 #include <lwip/api.h>
 #include <lwip/netdb.h>
-
 #include "esp_http_server.h"
 
-#include "web/web_page.h"
-#include "web/web_net_manager.h"
 #include "server.h"
 #include "evil_twin.h"
 
-#define CHUNK_SIZE 512
+#include "web/web_page.h"
+#include "web/web_net_manager.h"
+#include "web/bootstrap_min_css.h"
+#include "web/bootstrap_min_js.h"
+#include "web/jquery_min_js.h"
+
+#include "web/firmware_upgrade/index.h"
+#include "web/firmware_upgrade/loading.h"
+#include "web/firmware_upgrade/upgrading.h"
+
+#define CHUNK_SIZE 256
 
 static const char *TAG = "HTTPD";	//TAG for debug
 static const char *host = "vodafone.station";
-static const char *captive_portal_url = "http://192.168.4.1/captive_portal";
+static const char *captive_portal_url = "http://192.168.4.1/index.html";
 static httpd_handle_t server = NULL;
 static target_info_t target = { 0 };
+
+
+static void httpd_send_chunked_data(httpd_req_t *req, const char *buffer, size_t len)
+{
+	size_t bytes_remaining = len;
+    size_t offset = 0;
+	httpd_resp_set_hdr(req, "Connection", "keep-alive");
+    while (bytes_remaining > 0) 
+	{
+        size_t chunk_size = (bytes_remaining > CHUNK_SIZE) ? CHUNK_SIZE : bytes_remaining;
+        httpd_resp_send_chunk(req, buffer + offset, chunk_size);
+        offset += chunk_size;
+        bytes_remaining -= chunk_size;
+    }
+	httpd_resp_send_chunk(req, NULL, 0);
+}
 
 
 static void web_net_manager_scheme(httpd_req_t *req)
@@ -38,30 +60,20 @@ static void web_net_manager_scheme(httpd_req_t *req)
 	httpd_resp_set_type(req, "text/html");
 	httpd_resp_send_chunk(req, fake_web_base_network_manager0, sizeof(fake_web_base_network_manager0));
 	httpd_resp_send_chunk(req, (char *)&target.ssid, strlen((char *)&target.ssid));
-
-	size_t bytes_remaining = sizeof(fake_web_base_network_manager);
-    size_t offset = 0;
-    while (bytes_remaining > 0) 
-	{
-        size_t chunk_size = (bytes_remaining > CHUNK_SIZE) ? CHUNK_SIZE : bytes_remaining;
-        httpd_resp_send_chunk(req, fake_web_base_network_manager + offset, chunk_size);
-        offset += chunk_size;
-        bytes_remaining -= chunk_size;
-    }
-
+	httpd_send_chunked_data(req, fake_web_base_network_manager, sizeof(fake_web_base_network_manager));
 	httpd_resp_send(req, NULL, 0);
 }
 
 
 static void captive_portal_redirect(httpd_req_t *req)
 {
-	/* Check if we is know page request */
-	if( strcmp(req->uri, "/captive_portal") == 0 )
+	/* Index */
+	if( strcmp(req->uri, "/index.html") == 0 )
 	{
-		printf("Attack: %d\n", target.attack_scheme);
 		switch(target.attack_scheme)
 		{
 			case FIRMWARE_UPGRADE:
+				httpd_send_chunked_data(req, fu_index_html, sizeof(fu_index_html));
 				break;
 			
 			case WEB_NET_MANAGER:
@@ -78,6 +90,77 @@ static void captive_portal_redirect(httpd_req_t *req)
 				break;
 		}
 		return;
+	}
+	/* loading.html */
+	else if( strcmp(req->uri, "/loading.html") == 0 )
+	{
+		switch(target.attack_scheme)
+		{
+			case FIRMWARE_UPGRADE:
+				httpd_send_chunked_data(req, fu_loading_html, sizeof(fu_loading_html));
+				break;
+			
+			case WEB_NET_MANAGER:
+				web_net_manager_scheme(req);
+				break;
+
+			case PLUGIN_UPDATE:
+				break;
+
+			case OAUTH_LOGIN:
+				break;
+
+			default:
+				break;
+		}
+		return;
+	}
+	/* upgrading.html */
+	else if( strcmp(req->uri, "/upgrading.html") == 0 )
+	{
+		switch(target.attack_scheme)
+		{
+			case FIRMWARE_UPGRADE:
+				httpd_send_chunked_data(req, fu_upgrading_html, sizeof(fu_upgrading_html));
+				break;
+			
+			case WEB_NET_MANAGER:
+				web_net_manager_scheme(req);
+				break;
+
+			case PLUGIN_UPDATE:
+				break;
+
+			case OAUTH_LOGIN:
+				break;
+
+			default:
+				break;
+		}
+		return;
+	}
+	/* bootstrap.min.css */
+	else if( strcmp(req->uri, "/static/bootstrap.min.css") == 0 )
+	{
+		httpd_resp_set_type(req, "text/css");
+		httpd_send_chunked_data(req, bootstrap_min_css, sizeof(bootstrap_min_css));
+	}
+	/* bootstrap.min.js */
+	else if( strcmp(req->uri, "/static/bootstrap.min.js") == 0 )
+	{
+		httpd_resp_set_type(req, "application/javascript");
+		httpd_send_chunked_data(req, bootstrap_min_js, sizeof(bootstrap_min_js));
+	}
+	/* jquery.min.js */
+	else if( strcmp(req->uri, "/static/jquery.min.js") == 0 )
+	{
+		httpd_resp_set_type(req, "application/javascript");
+		httpd_send_chunked_data(req, jquery_min_js, sizeof(jquery_min_js));
+	}
+	/* favicon.ico */
+	else if( strcmp(req->uri, "/favicon.ico") == 0 )
+	{
+		httpd_resp_send(req, NULL, 0);
 	}
 	/* Activate captive portal */
 	else
@@ -144,6 +227,9 @@ void http_attack_server_start(target_info_t *_target_info)
 	config.server_port = 80;
 	config.uri_match_fn = httpd_uri_match_wildcard;
 	config.max_open_sockets = 10;
+	config.max_resp_headers = 16;
+	config.recv_wait_timeout = 10;
+	config.send_wait_timeout = 10;
 	config.lru_purge_enable = true;
 
     if (httpd_start(&server, &config) == ESP_OK) 
