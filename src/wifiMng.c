@@ -1,4 +1,6 @@
 #include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_mac.h"
@@ -12,6 +14,10 @@
 
 
 static const char *TAG = "WIFI_MNG";
+/* Enable send management frames */
+extern int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3){
+    return 0;
+}
 
 
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data)
@@ -26,6 +32,19 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
         ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d, reason=NULL", MAC2STR(event->mac), event->aid);
     }
+}
+
+
+static esp_err_t set_wifi_region() {
+    wifi_country_t country = {
+        .cc = "CN",      // Codice paese (EU per Europa)
+        .schan = 1,      // Canale iniziale
+        .nchan = 13,     // Numero di canali (1-13 per EU)
+        .policy = WIFI_COUNTRY_POLICY_MANUAL // Configurazione manual
+    };
+
+    esp_err_t err = esp_wifi_set_country(&country);
+    return err;
 }
 
 
@@ -72,6 +91,7 @@ void wifi_start_softap(void)
     }
     wifi_config.ap.authmode = DEFAULT_WIFI_AUTH;
 
+    ESP_ERROR_CHECK(set_wifi_region());
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -81,6 +101,7 @@ void wifi_start_softap(void)
 
 void wifi_ap_clone(wifi_config_t *wifi_config)
 {
+    ESP_ERROR_CHECK(set_wifi_region());
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());

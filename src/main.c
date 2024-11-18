@@ -1,6 +1,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_task_wdt.h"
 #include "nvs_flash.h"
 #include "server.h"
 #include "admin_server.h"
@@ -16,6 +17,14 @@ void app_main()
       ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
+
+    /* Config wdt */
+    esp_task_wdt_config_t wdt_conf = {
+      .idle_core_mask = 0x3,
+      .timeout_ms = 10000,
+      .trigger_panic = false
+    };
+    esp_task_wdt_init(&wdt_conf);
 
     /* Init wifi */
     wifi_init();

