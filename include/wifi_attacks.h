@@ -26,10 +26,58 @@ void wifi_attack_engine_start(uint8_t *bssid);
 
 
 /**
- * @brief Deauth attack by sending deauth frames and new technique 
+ * @brief Deauth attack by sending deauth frames 
  * 
  * @param bssid 
  */
-void wifi_attack_deauth(uint8_t *bssid);
+void wifi_attack_deauth_basic(void);
+
+
+/**
+ * @brief Deauthentication using invalid PMKID Tag Length in 4-Way Handshake 1/4.
+ * @note
+ * The EAPoL Key Descriptor needs to match the original 4-Way Handshake 1/4:
+ * For other network configurations, you might need to change byte 0x88 of
+ * the EAPoL-frame to the approratie value. For WPA2-Personal-PMF: 0x8a.
+ * Attack in fact works with an underflow in any tag, not just the PMKID.
+ * 
+ */
+void wifi_attack_deauth_client_invalid_PMKID(void);
+
+
+/**
+ * @brief Inject a 4-way message 1 frame that also has the Install flag set.
+ * 
+ */
+void wifi_attack_deauth_client_bad_msg1(void);
+
+
+/**
+ * @brief Deauthentication using an EAPOL-Logoff.
+ * 
+ */
+void wifi_attack_deauth_ap_eapol_logoff(void);
+
+
+/**
+ * @brief Deauthentication using an EAP-Failure.
+ * 
+ */
+void wifi_attack_deauth_client_eap_failure(void);
+
+
+/**
+ * @brief Deauthentication using an excessive number of EAP Rounds.
+ * 
+ */
+void wifi_attack_deauth_client_eap_rounds(void);
+
+
+/**
+ * @brief Deauthentication using EAPOL-Starts.
+ * 
+ */
+void wifi_attack_deauth_ap_eapol_start(void);
+
 
 #endif

@@ -15,6 +15,7 @@
         "vendors.h": "c",
         "evil_twin.h": "c",
         "wifimng.h": "c",
-        "stdint.h": "c"
+        "stdint.h": "c",
+        "functional": "c"
     }
 }

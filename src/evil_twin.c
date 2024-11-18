@@ -60,7 +60,7 @@ static void evil_twin_task(void *pvParameters)
 
     while(true)
     {
-        wifi_attack_deauth(target.bssid);
+        wifi_attack_deauth_basic();
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
