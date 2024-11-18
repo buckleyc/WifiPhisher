@@ -133,6 +133,8 @@ void wifi_attack_engine_start(uint8_t *bssid)
         .filter_mask = WIFI_PROMIS_FILTER_MASK_DATA
     };
     esp_wifi_set_promiscuous_filter(&filter);
+    filter.filter_mask = WIFI_PROMIS_CTRL_FILTER_MASK_ALL;
+    esp_wifi_set_promiscuous_ctrl_filter(&filter);
     esp_wifi_set_promiscuous_rx_cb(promiscuous_callback);
 }
 
