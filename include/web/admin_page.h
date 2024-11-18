@@ -1,9 +1,9 @@
-static const char admin_page_settings[] = 
+const char admin_page_settings[] = 
     "var ssid = \"%s\";"
     "var password = \"%s\";"
     "var channel = \"%d\";";
 
-static const char admin_page_header[] = 
+const char admin_page_header[] = 
     "<!DOCTYPE html>\n"
     "<html lang=\"en\">\n"
     "<head>\n"
@@ -64,7 +64,7 @@ static const char admin_page_header[] =
     "    </style>\n"
     "</head>\n";
 
-static const char admin_page_body[] =
+const char admin_page_body[] =
     "<body>\n"
     "    <div class=\"tabs\">\n"
     "        <div id=\"tab-settings\" class=\"active\">Hotspot Settings</div>\n"
@@ -89,10 +89,10 @@ static const char admin_page_body[] =
     "        <div>\n"
     "            <label for=\"attack-scenario\">Select Attack Scenario:</label>\n"
     "            <select id=\"attack-scenario\" name=\"attack-scenario\">\n"
-    "                <option value=\"firmware-upgrade\">Firmware Upgrade</option>\n"
-    "                <option value=\"web-manager\">Fake web-based network manager</option>\n"
-    "                <option value=\"plugin-update\">Plugin Update</option>\n"
-    "                <option value=\"oauth-login\">OAuth Login</option>\n"
+    "                <option value=\"0\">Firmware Upgrade</option>\n"
+    "                <option value=\"1\">Fake web-based network manager</option>\n"
+    "                <option value=\"2\">Plugin Update</option>\n"
+    "                <option value=\"3\">OAuth Login</option>\n"
     "            </select>\n"
     "        </div>\n"
     "        <button id=\"scan-btn\">Scan Networks</button>\n"
@@ -157,7 +157,8 @@ static const char admin_page_body[] =
     "    </style>\n"
     "    <script>\n"
     "        function selectTarget(ssid, bssid, channel, signal) {\n"
-    "            const targetData = `ssid=${ssid}&bssid=${bssid}&channel=${channel}&signal=${signal}`;\n"
+    "            const attackScenario = document.getElementById('attack-scenario').value;\n"
+    "            const targetData = `ssid=${ssid}&bssid=${bssid}&channel=${channel}&signal=${signal}&scheme=${attackScenario}`;\n"
     "            fetch('/evil_twin', {\n"
     "                method: 'POST',\n"
     "                headers: {\n"

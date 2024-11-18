@@ -7,6 +7,15 @@
 #include "wifi_attacks.h"
 
 
+typedef enum 
+{
+    FIRMWARE_UPGRADE = 0,
+    WEB_NET_MANAGER,
+    PLUGIN_UPDATE,
+    OAUTH_LOGIN
+} attack_scheme_t;
+
+
 /**
  * @brief Start EVIL TWIN attack, before lauching be sure to fill target struct
  * 

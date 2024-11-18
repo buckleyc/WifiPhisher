@@ -29,6 +29,7 @@ typedef struct {
     int8_t rssi;
     uint8_t channel;
     vendors_t vendor;
+    uint8_t attack_scheme;
 } target_info_t;
 
 

@@ -18,6 +18,10 @@
         "stdint.h": "c",
         "functional": "c",
         "admin_server.h": "c",
-        "wifi_attacks.h": "c"
+        "wifi_attacks.h": "c",
+        "esp_task_wdt.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c"
     }
 }

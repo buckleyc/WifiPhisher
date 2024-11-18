@@ -19,7 +19,7 @@
 #include "esp_http_server.h"
 
 #include "server.h"
-#include "admin_page.h"
+#include "web/admin_page.h"
 #include "config.h"
 #include "evil_twin.h"
 #include "img/admin_favicon.h"
@@ -32,9 +32,9 @@ static const char *TAG = "ADMIN_SERVER:";
 static const char *authmode_str[] = {
         "Open", "WEP", "WPA/PSK", "WPA2/PSK", "WPA_WPA2/PSK", "WPA3/PSK", "WPA2_WPA3/PSK", "WAPI/PSK"
 };
-static const char *cipher_str[] = {
-    "None", "WEP40", "WEP104", "TKIP", "CCMP", "TKIP_CCMP", "AES_CMAC", "Unknown"
-};
+// static const char *cipher_str[] = {
+//     "None", "WEP40", "WEP104", "TKIP", "CCMP", "TKIP_CCMP", "AES_CMAC", "Unknown"
+// };
 /* Buffers for json used for network scanning */
 static char json_response[2048];
 static char entry[256];
@@ -64,7 +64,7 @@ static esp_err_t admin_page_handler(httpd_req_t *req)
 
     httpd_resp_set_type(req, "text/html");
     /* Send page header */
-    httpd_resp_send_chunk(req, admin_page_header, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send_chunk(req, admin_page_header, sizeof(admin_page_header));
 
     /* Send parameters */
     httpd_resp_send_chunk(req, "<script>", HTTPD_RESP_USE_STRLEN);
@@ -73,7 +73,7 @@ static esp_err_t admin_page_handler(httpd_req_t *req)
     httpd_resp_send_chunk(req, "</script>\n", HTTPD_RESP_USE_STRLEN);
 
     /* Send body */
-    httpd_resp_send_chunk(req, admin_page_body, HTTPD_RESP_USE_STRLEN);
+    httpd_resp_send_chunk(req, admin_page_body, sizeof(admin_page_body));
     httpd_resp_send_chunk(req, NULL, 0);
     return ESP_OK;
 }
@@ -182,7 +182,7 @@ static esp_err_t evil_twin_handler(httpd_req_t *req)
     buffer[ret] = '\0';
     char bssid[64] = {0};
     target_info_t target_info = { 0 };
-    sscanf(buffer,"ssid=%32[^&]&bssid=%17[^&]&channel=%hhu&signal=%hhd", target_info.ssid, bssid, &target_info.channel, &target_info.rssi);
+    sscanf(buffer,"ssid=%32[^&]&bssid=%17[^&]&channel=%hhu&signal=%hhd&scheme=%hhd", target_info.ssid, bssid, &target_info.channel, &target_info.rssi, &target_info.attack_scheme);
 
     if (sscanf(bssid, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
                &target_info.bssid[0], &target_info.bssid[1], &target_info.bssid[2],
