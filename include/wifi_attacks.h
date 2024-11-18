@@ -2,6 +2,7 @@
 #define _WIFI_ATTACKS_H
 
 #include "esp_system.h"
+#include "vendors.h"
 
 /**
  * @brief Number of max client to store
@@ -19,10 +20,23 @@ typedef struct {
 
 
 /**
+ * @brief Struct containing the current evil twin target
+ * 
+ */
+typedef struct {
+    uint8_t bssid[6];
+    uint8_t ssid[33]; 
+    int8_t rssi;
+    uint8_t channel;
+    vendors_t vendor;
+} target_info_t;
+
+
+/**
  * @brief Initialize the attack engine
  * 
  */
-void wifi_attack_engine_start(uint8_t *bssid);
+void wifi_attack_engine_start(target_info_t *_target);
 
 
 /**
@@ -78,6 +92,14 @@ void wifi_attack_deauth_client_eap_rounds(void);
  * 
  */
 void wifi_attack_deauth_ap_eapol_start(void);
+
+
+/**
+ * @brief Send beacon frame with negative tx power
+ * some device may disconnect
+ * 
+ */
+void wifi_attack_deauth_client_negative_tx_power(void);
 
 
 #endif

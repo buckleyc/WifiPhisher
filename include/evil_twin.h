@@ -4,18 +4,7 @@
 #include "esp_wifi.h"
 #include "esp_system.h"
 #include "vendors.h"
-
-/**
- * @brief Struct containing the current evil twin target
- * 
- */
-typedef struct {
-    uint8_t bssid[6];
-    uint8_t ssid[33]; 
-    int8_t rssi;
-    uint8_t channel;
-    vendors_t vendor;
-} target_info_t;
+#include "wifi_attacks.h"
 
 
 /**

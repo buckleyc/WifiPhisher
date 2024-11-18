@@ -16,6 +16,8 @@
         "evil_twin.h": "c",
         "wifimng.h": "c",
         "stdint.h": "c",
-        "functional": "c"
+        "functional": "c",
+        "admin_server.h": "c",
+        "wifi_attacks.h": "c"
     }
 }

