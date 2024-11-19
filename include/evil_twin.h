@@ -20,15 +20,7 @@ typedef enum
  * @brief Start EVIL TWIN attack, before lauching be sure to fill target struct
  * 
  */
-void evil_twin_start_attack(void);
-
-
-/**
- * @brief Set evil twin target information
- * 
- * @param targe_info 
- */
-void evil_twin_set_target(target_info_t *targe_info);
+void evil_twin_start_attack(target_info_t *targe_info);
 
 
 /**

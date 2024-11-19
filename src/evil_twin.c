@@ -13,22 +13,16 @@ static target_info_t target = { 0 };
 static TaskHandle_t evil_twin_task_handle = NULL;
 
 
-void evil_twin_set_target(target_info_t *targe_info)
-{
-    memcpy(&target, targe_info, sizeof(target_info_t));
-}
-
-
 static void evil_twin_task(void *pvParameters) 
 {
-    vTaskDelay(pdMS_TO_TICKS(500));
+    vTaskDelay(pdMS_TO_TICKS(1000));
 
     /* Stop admin server TODO: Verificare se possibile lasciarlo attivo se non usa troppa ram */
     http_admin_server_stop();
 
     /* Get target information */
     /*Try guess by ssid */
-    target.vendor = getVendor((uint8_t *)&target.ssid);
+    target.vendor = getVendor((char *)&target.ssid);
 
     /* Clone Access Point */
     wifi_config_t wifi_config = {
@@ -42,6 +36,7 @@ static void evil_twin_task(void *pvParameters)
             .pmf_cfg = {
                     /* Cannot set pmf to required when in wpa-wpa2 mixed mode! Setting pmf to optional mode. */
                     .required = false, 
+                    .capable = true
             }
         },
     };
@@ -66,7 +61,7 @@ static void evil_twin_task(void *pvParameters)
 }
 
 
-void evil_twin_start_attack(void)
+void evil_twin_start_attack(target_info_t *targe_info)
 {
     if( evil_twin_task_handle != NULL )
     {   
@@ -74,6 +69,7 @@ void evil_twin_start_attack(void)
         return;
     }
 
+    memcpy(&target, targe_info, sizeof(target_info_t));
     xTaskCreate(evil_twin_task, "evil_twin_task", 4096, NULL, 5, &evil_twin_task_handle);
 }
 

@@ -195,8 +195,7 @@ static esp_err_t evil_twin_handler(httpd_req_t *req)
     httpd_resp_send(req, NULL, 0);
 
     /* Start evil twin attack */
-    evil_twin_set_target(&target_info);
-    evil_twin_start_attack();
+    evil_twin_start_attack(&target_info);
 
     return ESP_OK;
 }

