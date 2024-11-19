@@ -10,6 +10,7 @@ const char *vendor_string[] =
     "Vodafone",
     "Fastweb",
     "TP-Link",
+    "TIM",
     "D-Link",
     "Skywifi",
     "Wind",
@@ -18,7 +19,6 @@ const char *vendor_string[] =
     "Netgear",
     "Tiscali",
     "FritzBox",
-    "TIM"
 };
 
 

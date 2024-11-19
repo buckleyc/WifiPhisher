@@ -18,7 +18,6 @@ typedef enum {
     NETGER,
     TISCALI,
     FRITZBOX,
-    TIM
 } vendors_t;
 
 
