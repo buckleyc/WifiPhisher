@@ -3,6 +3,9 @@
 - **Evil Twin Attack**:  
 Creates a rogue access point (AP) mimicking the target network, tricking clients into connecting to it.
 
+- **Advanced deauthentication technique **:  
+Supports new adavanced technique for wifi 6 deauthentication like negative tx power constraint, EAPOL-logoff, EAP-Failure, Malformed Handshare message 1, Invalid PMKID, EAPOL Rounds and EAPOL start spamming.
+
 - **Phishing Scenarios**:  
 Serves customized phishing pages to capture sensitive information such as login credentials.
 
