@@ -1,5 +1,142 @@
-Funzionamento in generale
+# WifiPhisher for ESP32
 
-L'esp all'avvio attiva un hotspot wifi con ssid e password di default che potremo modificare in seguito tramite la pagina web
-avvia il server httpd e un server DNS il cui inico compito sara di reindirizzare tutti gli host sul nostro ip
-una volta che ci siamo connessi all'hotspot creato dobbiamo navigare alla pagina /admin
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-blue)](https://github.com/Alexxdal/WifiPhisher/tree/develop)
+
+WifiPhisher for ESP32 is a custom implementation of a phishing tool designed for the ESP32 microcontroller. It performs Evil Twin attacks, allowing users to test the security of Wi-Fi networks and execute social engineering phishing scenarios. The project is built using **PlatformIO** and the **ESP-IDF framework**.
+
+---
+
+## Key Features
+
+- **Evil Twin Attack**:  
+  Creates a rogue access point (AP) mimicking the target network, tricking clients into connecting to it.
+  
+- **Phishing Scenarios**:  
+  Serves customized phishing pages to capture sensitive information such as login credentials.
+
+- **Compact and Portable**:  
+  Runs on the ESP32, making it lightweight and suitable for hardware testing scenarios.
+
+- **Configurable via Web Interface**:  
+  Allows customization of network settings and phishing scenarios through a web interface.
+
+---
+
+## Requirements
+
+### Hardware
+
+- **ESP32 Development Board**:  
+  Any ESP32 board with Wi-Fi capability (e.g., ESP32-WROOM-32).
+
+- **Power Source**:  
+  A USB connection or battery to power the ESP32.
+
+### Software
+
+- **PlatformIO**:  
+  Integrated into your IDE (e.g., Visual Studio Code). [Install PlatformIO](https://platformio.org/install).
+
+- **ESP-IDF Framework**:  
+  Required for building and flashing the firmware. PlatformIO automatically configures this as part of the development environment.
+
+---
+
+## Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/Alexxdal/WifiPhisher.git
+cd WifiPhisher
+
+2. Configure PlatformIO
+
+Open the project in your IDE (e.g., Visual Studio Code) and ensure that PlatformIO is correctly set up:
+
+    Check the platformio.ini file in the project root:
+        Verify that the platform, board, and framework match your ESP32 development board.
+        Example configuration in platformio.ini:
+
+        [env:esp32dev]
+        platform = espressif32
+        board = esp32dev
+        framework = espidf
+
+    Install necessary dependencies by allowing PlatformIO to resolve them during the first build.
+
+    Adjust the code in the src/ and data/ folders as needed.
+
+3. Build and Upload
+
+To build and upload the firmware to your ESP32:
+
+    Connect your ESP32 board to your computer via USB.
+    In the PlatformIO terminal, run the following command:
+
+    pio run --target upload
+
+4. Monitor Logs
+
+To debug or monitor the ESP32's output logs:
+
+    Use PlatformIO's serial monitor:
+
+    pio device monitor
+
+    To stop the monitor, press Ctrl+C.
+
+Usage
+
+    Start the Device
+    Power up the ESP32. It will automatically begin scanning nearby Wi-Fi networks.
+
+    Access Web Interface
+        Connect to the ESP32’s rogue AP (e.g., "Phisher_AP").
+        Open a browser and go to 192.168.4.1.
+
+    Configure the Attack
+        Select the target Wi-Fi network to impersonate.
+        Choose a phishing scenario (e.g., fake login page).
+
+    Run the Attack
+    Once configured, the ESP32 will execute the Evil Twin attack and serve the phishing page.
+
+Project Structure
+
+    src/:
+    Contains the main application code for the ESP32.
+
+    data/:
+    Includes HTML, CSS, and JavaScript files for the phishing pages and the web interface.
+
+    platformio.ini:
+    Configuration file for PlatformIO specifying the board, framework, and environment.
+
+Contributions
+
+Contributions are welcome! You can improve phishing scenarios, optimize performance, or add new features.
+
+    Fork the repository:
+    Click the "Fork" button on GitHub to create your own copy of the repository.
+
+    Create a new branch:
+    Create a branch for your changes:
+
+git checkout -b feature-name
+
+Make your changes:
+Commit your modifications:
+
+git add .
+git commit -m "Add new feature"
+
+Submit a pull request:
+Push your branch to your forked repository:
+
+    git push origin feature-name
+
+    Then create a pull request on the main repository.
+
+Disclaimer
+
+This tool is intended strictly for educational purposes and ethical hacking in controlled environments. Unauthorized use of WifiPhisher for malicious purposes is illegal and punishable by law. Always ensure you have explicit permission before conducting any testing.
