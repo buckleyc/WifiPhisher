@@ -6,6 +6,9 @@ Creates a rogue access point (AP) mimicking the target network, tricking clients
 - **Advanced deauthentication technique**:  
 Supports new adavanced technique for wifi 6 deauthentication like negative tx power constraint, EAPOL-logoff, EAP-Failure, Malformed Handshare message 1, Invalid PMKID, EAPOL Rounds and EAPOL start spamming.
 
+- **Automatic Vendor Identification**:  
+Support for vendor identification based on SSID name and capturing beacon frame (TO DO).
+
 - **Phishing Scenarios**:  
 Serves customized phishing pages to capture sensitive information such as login credentials.
 
