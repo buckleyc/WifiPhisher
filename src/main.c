@@ -1,6 +1,12 @@
+#include <string.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_task_wdt.h"
 #include "nvs_flash.h"
 #include "server.h"
+#include "admin_server.h"
 #include "wifiMng.h"
+#include "dns.h"
 
 void app_main() 
 {
@@ -12,9 +18,23 @@ void app_main()
     }
     ESP_ERROR_CHECK(ret);
 
+    /* Config wdt */
+    esp_task_wdt_config_t wdt_conf = {
+      .idle_core_mask = 0x3,
+      .timeout_ms = 10000,
+      .trigger_panic = false
+    };
+    esp_task_wdt_init(&wdt_conf);
+
+    /* Init wifi */
+    wifi_init();
+
     /* Start wifi AP */
     wifi_start_softap();
 
-    /* Start http server */
-    http_server_start();
+    /* Start dns server */
+    dns_server_start();
+
+    /* Start admin http server */
+    http_admin_server_start();
 }
