@@ -24,7 +24,7 @@ Serves customized phishing pages to capture sensitive information such as login 
 ## To-Do List 
 - [ ] Add a channel tracking functionality (some ap may switch channel)
 - [ ] Add a handshake capture and basic aircrack implementation to check user input password
-- [ ] Add a telegram/email notification when password is succesfully stealed
+- [ ] Add a telegram/email notification when password is succesfully stolen
 
 # WifiPhisher for ESP32
 
