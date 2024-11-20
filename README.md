@@ -3,7 +3,7 @@
 - **Evil Twin Attack**:  
 Creates a rogue access point (AP) mimicking the target network, tricking clients into connecting to it.
 
-- **Captive Portal**:
+- **Captive Portal**:  
 Victims will be automatically redirected to the Captive Portal page upon connecting to the fake access point.
 
 - **Advanced deauthentication technique**:  
@@ -20,6 +20,11 @@ Serves customized phishing pages to capture sensitive information such as login 
 
 - **Configurable via Web Interface**:  
   Allows customization of network settings and phishing scenarios through a web interface.
+
+## To-Do List 
+- [ ] Add a channel tracking functionality (some ap may switch channel)
+- [ ] Add a handshake capture and basic aircrack implementation to check user input password
+- [ ] Add a telegram/email notification when password is succesfully stealed
 
 # WifiPhisher for ESP32
 
